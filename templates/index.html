@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IT Infrastructure Health Monitor</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; padding: 30px; }
+        h2, h3 { color: #38bdf8; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .grid { display: flex; gap: 20px; margin-bottom: 30px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 10px; flex: 1; text-align: center; border: 1px solid #334155; }
+        .metric { font-size: 2.2em; font-weight: bold; margin-top: 10px; }
+        table { width: 100%; background: #1e293b; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 14px; border-bottom: 1px solid #334155; text-align: left; }
+        th { background: #334155; color: #e2e8f0; }
+        .online { color: #22c55e; font-weight: bold; }
+        .offline { color: #ef4444; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>IT Infrastructure & Network Health Monitor</h2>
+        <span id="last-updated">Updating...</span>
+    </div>
+    <div class="grid">
+        <div class="card"><h3>CPU Load</h3><div id="cpu" class="metric">--%</div></div>
+        <div class="card"><h3>Memory (RAM)</h3><div id="ram" class="metric">--%</div></div>
+        <div class="card"><h3>Storage (Disk)</h3><div id="disk" class="metric">--%</div></div>
+    </div>
+    <h3>Monitored Services & Nodes</h3>
+    <table>
+        <thead><tr><th>Service / Node</th><th>Target (Host:Port)</th><th>Status</th></tr></thead>
+        <tbody id="network-table"></tbody>
+    </table>
+    <script>
+        async function fetchStatus() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            document.getElementById('last-updated').innerText = 'Last check: ' + data.timestamp;
+            document.getElementById('cpu').innerText = data.cpu + '%';
+            document.getElementById('ram').innerText = data.ram + '%';
+            document.getElementById('disk').innerText = data.disk + '%';
+            const tbody = document.getElementById('network-table');
+            tbody.innerHTML = data.network.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.host}</td>
+                    <td class="${item.status.toLowerCase()}">${item.status}</td>
+                </tr>
+            `).join('');
+        }
+        fetchStatus();
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>
